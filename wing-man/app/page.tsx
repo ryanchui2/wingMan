@@ -6,6 +6,7 @@ export default function Home() {
   const [message, setMessage] = useState('');
   const [reply, setReply] = useState('');
   const [loading, setLoading] = useState(false);
+  const [hasSubmitted, setHasSubmitted] = useState(false);
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
@@ -14,6 +15,7 @@ export default function Home() {
 
     setLoading(true);
     setReply('');
+    setHasSubmitted(true);
 
     try {
       const response = await fetch('/api/chat', {
@@ -39,45 +41,85 @@ export default function Home() {
   };
 
   return (
-    <div className="min-h-screen flex flex-col bg-gradient-to-br from-[#e2c0d7] to-white">
+    <div className="h-screen overflow-hidden flex flex-col bg-gradient-to-br from-[#e2c0d7] to-white">
       {/* Main Content */}
-      <main className="flex-1 flex items-center justify-center px-8 py-16 md:px-16 lg:px-24">
-        <div className="w-full max-w-3xl">
+      <main className={`flex-1 flex px-8 py-16 md:px-16 lg:px-24 transition-all duration-700 overflow-hidden ${
+        hasSubmitted ? 'items-start' : 'items-center justify-center'
+      }`}>
+        <div className={`flex gap-8 w-full transition-all duration-700 h-full ${
+          hasSubmitted ? 'flex-row items-start' : 'flex-col items-center max-w-3xl justify-center'
+        }`}>
           {/* Site Name - Brutalist Typography */}
-          <h1 className="text-[12vw] sm:text-[10vw] md:text-[8rem] lg:text-[10rem] font-black leading-none mb-12 text-black tracking-tighter">
+          <h1 className={`font-black text-black transition-all duration-700 ${
+            hasSubmitted
+              ? 'writing-mode-vertical text-3xl md:text-4xl tracking-tighter leading-none shrink-0'
+              : 'text-[6vw] sm:text-[5vw] md:text-[4rem] lg:text-[5rem] leading-none mb-2 tracking-tighter'
+          }`}
+          style={hasSubmitted ? { writingMode: 'vertical-rl', textOrientation: 'upright' } : {}}
+          >
             WINGMAN
           </h1>
 
-          {/* Chat Input */}
-          <form onSubmit={handleSubmit} className="space-y-6">
-            <div className="relative">
-              <input
-                type="text"
-                value={message}
-                onChange={(e) => setMessage(e.target.value)}
-                placeholder="what's the plan?"
-                disabled={loading}
-                className="w-full px-8 py-6 text-2xl md:text-3xl bg-white border-4 border-black text-black placeholder-gray-400 focus:outline-none focus:border-black font-mono disabled:opacity-50"
-              />
-            </div>
+            <div className={`flex transition-all duration-700 ${hasSubmitted ? 'w-full h-full' : 'w-full justify-center'}`}>
+            {/* Chat Input - Only show when not submitted */}
+            {!hasSubmitted && (
+              <form onSubmit={handleSubmit} className="space-y-3 w-full max-w-2xl">
+                <div className="relative">
+                  <input
+                    type="text"
+                    value={message}
+                    onChange={(e) => setMessage(e.target.value)}
+                    placeholder="what's the plan?"
+                    disabled={loading}
+                    className="w-full px-4 py-3 text-xl md:text-xl bg-white border-4 border-black text-black placeholder-gray-400 focus:outline-none focus:border-black font-mono disabled:opacity-50"
+                  />
+                </div>
 
-            <button
-              type="submit"
-              disabled={loading || !message.trim()}
-              className="w-full px-8 py-6 text-xl md:text-2xl bg-black text-white border-4 border-black font-mono uppercase tracking-wider hover:bg-white hover:text-black transition-colors disabled:opacity-50 disabled:cursor-not-allowed font-bold"
-            >
-              {loading ? 'cooking...' : 'ask wingman'}
-            </button>
-          </form>
+                <button
+                  type="submit"
+                  disabled={loading || !message.trim()}
+                  className="w-full px-4 py-3 text-base md:text-lg bg-black text-white border-4 border-black font-mono uppercase tracking-wider hover:bg-white hover:text-black transition-colors disabled:opacity-50 disabled:cursor-not-allowed font-bold"
+                >
+                  {loading ? 'cooking...' : 'ask wingman'}
+                </button>
+              </form>
+            )}
 
-          {/* Response */}
-          {reply && (
-            <div className="mt-8 p-8 bg-white border-4 border-black">
-              <p className="text-lg md:text-xl leading-relaxed whitespace-pre-wrap">
-                {reply}
-              </p>
-            </div>
-          )}
+            {/* Response - Show as full text box when submitted */}
+            {hasSubmitted && (
+              <div className="h-full w-full flex flex-col gap-3">
+                {/* User's question */}
+                <div className="p-3 bg-black text-white border-4 border-black flex-shrink-0">
+                  <p className="text-base md:text-lg font-mono font-bold">
+                    {message}
+                  </p>
+                </div>
+
+                {/* AI Response - Fixed height scrollable */}
+                <div className="flex-1 p-6 bg-white border-4 border-black overflow-y-auto min-h-0">
+                  {loading ? (
+                    <p className="text-base md:text-lg text-gray-400 font-mono">cooking...</p>
+                  ) : (
+                    <p className="text-sm md:text-base leading-relaxed whitespace-pre-wrap">
+                      {reply}
+                    </p>
+                  )}
+                </div>
+
+                {/* New question button */}
+                <button
+                  onClick={() => {
+                    setHasSubmitted(false);
+                    setMessage('');
+                    setReply('');
+                  }}
+                  className="px-4 py-2 text-sm md:text-base bg-black text-white border-4 border-black font-mono uppercase tracking-wider hover:bg-white hover:text-black transition-colors font-bold flex-shrink-0"
+                >
+                  ask another question
+                </button>
+              </div>
+            )}
+          </div>
         </div>
       </main>
 
