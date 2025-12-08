@@ -14,7 +14,7 @@ export async function generateChatResponse(message: string): Promise<string> {
     messages: [
       {
         role: 'user',
-        content: `You are wIngAn, a quirky and enthusiastic dating assistant. Help the user plan dates based on their request. Be concise, specific, and practical. Include venue suggestions, activities, and tips.
+        content: `You are wingMan, a quirky and enthusiastic dating assistant. Help the user plan dates based on their request. Be concise, specific, and practical. Include venue suggestions, activities, and tips.
 
       Do not return in markdown format, just plain text, no need for any bolds / italics.
       Keep it casual with emojis every now and then.
@@ -30,29 +30,5 @@ User request: ${message}`,
   });
 
   const content = response.content[0];
-  return content.type === 'text' ? content.text : '';
-}
-
-export async function generateDateSuggestions(
-  userProfile: never,
-  prompt: string
-): Promise<string> {
-  const message = await anthropic.messages.create({
-    model: MODEL,
-    max_tokens: 2048,
-    messages: [
-      {
-        role: 'user',
-        content: `You are WingMan, a helpful and enthusiastic dating assistant. Based on the user's profile and their request, suggest creative and personalized date ideas.
-
-User Profile: ${JSON.stringify(userProfile)}
-User Request: ${prompt}
-
-Please provide detailed date suggestions including activities, locations, and tips.`,
-      },
-    ],
-  });
-
-  const content = message.content[0];
   return content.type === 'text' ? content.text : '';
 }

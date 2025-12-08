@@ -1,6 +1,6 @@
-# WingMan - Your AI Dating Buddy
+# wingMan - Your AI Dating Buddy
 
-Behind every great relationship is a supportive wingman. WingMan is an AI-powered web application that helps you plan unforgettable dates, track your dating journey, and make every moment count.
+Behind every great relationship is a supportive wingman. wingMan is an AI-powered web application that helps you plan unforgettable dates, track your dating journey, and make every moment count.
 
 ## Features
 

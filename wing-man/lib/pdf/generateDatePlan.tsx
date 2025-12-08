@@ -100,7 +100,7 @@ export const DatePlanPDF: React.FC<DatePlanPDFProps> = ({ datePlan }) => (
       )}
 
       <Text style={styles.footer}>
-        Created with WingMan - Your AI Dating Assistant
+        Created with wingMan - Your AI Dating Assistant
       </Text>
     </Page>
   </Document>

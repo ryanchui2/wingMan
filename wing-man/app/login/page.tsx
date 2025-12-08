@@ -1,10 +1,10 @@
 'use client';
 
+import { signIn } from 'next-auth/react';
+
 export default function LoginPage() {
   const handleGoogleSignIn = () => {
-    // TODO: Implement Google sign-in
-    // You'll call signIn('google') here from next-auth/react
-    console.log('Google sign-in clicked');
+    signIn('google', { callbackUrl: '/' });
   };
 
   return (
