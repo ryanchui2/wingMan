@@ -2,8 +2,8 @@
 
 import { useState, FormEvent, useRef, useEffect } from 'react';
 import { useSession } from 'next-auth/react';
-import ProfilePopup from './components/ProfilePopup';
 import WelcomeScreen from './components/WelcomeScreen';
+import Link from 'next/link';
 
 export default function Home() {
   const { data: session, status } = useSession();
@@ -11,7 +11,6 @@ export default function Home() {
   const [reply, setReply] = useState('');
   const [loading, setLoading] = useState(false);
   const [hasSubmitted, setHasSubmitted] = useState(false);
-  const [isProfileOpen, setIsProfileOpen] = useState(false);
   const [showWelcome, setShowWelcome] = useState(true);
   const [hasToken, setHasToken] = useState(false);
   const guestTokenCreated = useRef(false);
@@ -190,12 +189,9 @@ export default function Home() {
             <a href="#" className="hover:underline font-bold">
               Dates
             </a>
-            <button
-              onClick={() => setIsProfileOpen(true)}
-              className="hover:underline font-bold"
-            >
+            <Link href="/profile" className="hover:underline font-bold">
               Profile
-            </button>
+            </Link>
             <a href="#" className="hover:underline font-bold">
               History
             </a>
@@ -205,9 +201,6 @@ export default function Home() {
           </nav>
         </div>
       </footer>
-
-      {/* Profile Popup */}
-      <ProfilePopup isOpen={isProfileOpen} onClose={() => setIsProfileOpen(false)} />
     </div>
   );
 }
