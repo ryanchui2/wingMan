@@ -5,6 +5,9 @@ import { useSession } from 'next-auth/react';
 import { useSearchParams } from 'next/navigation';
 import WelcomeScreen from './components/WelcomeScreen';
 import Link from 'next/link';
+import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
+import remarkBreaks from 'remark-breaks';
 
 interface ChatMessage {
   role: 'user' | 'assistant';
@@ -199,9 +202,11 @@ export default function Home() {
                         : 'bg-white text-black'
                     }`}
                   >
-                    <p className="text-sm md:text-base leading-relaxed whitespace-pre-wrap">
-                      {msg.content}
-                    </p>
+                    <div className="text-sm md:text-base leading-relaxed prose prose-sm md:prose-base max-w-none prose-invert:text-white prose-headings:font-bold prose-a:text-blue-600 prose-code:bg-gray-100 prose-code:px-1 prose-code:rounded prose-pre:bg-gray-900 prose-pre:text-white">
+                      <ReactMarkdown remarkPlugins={[remarkGfm, remarkBreaks]}>
+                        {msg.content}
+                      </ReactMarkdown>
+                    </div>
                   </div>
                 ))}
                 {loading && (
