@@ -84,7 +84,7 @@ export default function HistoryPage() {
       <div className="max-w-4xl mx-auto">
         {/* Title */}
         <h1 className="text-5xl md:text-6xl font-black text-center mb-12 text-black tracking-tighter">
-          CONVERSATION HISTORY
+          HISTORY
         </h1>
 
         {/* Conversations List */}
@@ -96,6 +96,9 @@ export default function HistoryPage() {
           </div>
         ) : (
           <div className="space-y-4">
+
+            {/* TODO: Create a component for conversation cards later */}
+
             {conversations.map((conversation) => (
               <div
                 key={conversation.id}

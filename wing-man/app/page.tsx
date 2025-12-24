@@ -5,16 +5,21 @@ import { useSession } from 'next-auth/react';
 import WelcomeScreen from './components/WelcomeScreen';
 import Link from 'next/link';
 
+interface ChatMessage {
+  role: 'user' | 'assistant';
+  content: string;
+}
+
 export default function Home() {
   const { data: session, status } = useSession();
   const [message, setMessage] = useState('');
-  const [reply, setReply] = useState('');
   const [loading, setLoading] = useState(false);
-  const [hasSubmitted, setHasSubmitted] = useState(false);
+  const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [showWelcome, setShowWelcome] = useState(true);
   const [hasToken, setHasToken] = useState(false);
   const [conversationId, setConversationId] = useState<string | null>(null);
   const guestTokenCreated = useRef(false);
+  const messagesEndRef = useRef<HTMLDivElement>(null);
 
   // Check if user has auth or guest token on mount
   useEffect(() => {
@@ -68,9 +73,12 @@ export default function Home() {
       return;
     }
 
+    const userMessage = message;
+
+    // Add user message to chat immediately
+    setMessages((prev) => [...prev, { role: 'user', content: userMessage }]);
+    setMessage('');
     setLoading(true);
-    setReply('');
-    setHasSubmitted(true);
 
     try {
       const response = await fetch('/api/chat', {
@@ -79,7 +87,7 @@ export default function Home() {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          message,
+          message: userMessage,
           conversationId
         }),
       });
@@ -87,20 +95,26 @@ export default function Home() {
       const data = await response.json();
 
       if (response.ok) {
-        setReply(data.reply);
+        // Add assistant response to chat
+        setMessages((prev) => [...prev, { role: 'assistant', content: data.reply }]);
         // Save conversation ID for future messages
         if (data.conversationId) {
           setConversationId(data.conversationId);
         }
       } else {
-        setReply('Error: ' + (data.error || 'Failed to get response'));
+        setMessages((prev) => [...prev, { role: 'assistant', content: 'Error: ' + (data.error || 'Failed to get response') }]);
       }
     } catch (error) {
-      setReply('Error: Failed to connect to server');
+      setMessages((prev) => [...prev, { role: 'assistant', content: 'Error: Failed to connect to server' }]);
     } finally {
       setLoading(false);
     }
   };
+
+  // Auto-scroll to bottom when new messages arrive
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  }, [messages]);
 
   // Show welcome screen if no token
   if (showWelcome) {
@@ -111,81 +125,85 @@ export default function Home() {
     <div className="h-screen overflow-hidden flex flex-col bg-gradient-to-br from-[#e2c0d7] to-white">
       {/* Main Content */}
       <main className={`flex-1 flex px-8 py-16 md:px-16 lg:px-24 transition-all duration-700 overflow-hidden ${
-        hasSubmitted ? 'items-start' : 'items-center justify-center'
+        messages.length > 0 ? 'items-start' : 'items-center justify-center'
       }`}>
         <div className={`flex gap-8 w-full transition-all duration-700 h-full ${
-          hasSubmitted ? 'flex-row items-start' : 'flex-col items-center max-w-3xl justify-center'
+          messages.length > 0 ? 'flex-row items-start' : 'flex-col items-center max-w-3xl justify-center'
         }`}>
           {/* Site Name - Brutalist Typography */}
           <h1 className={`font-black text-black transition-all duration-700 ${
-            hasSubmitted
+            messages.length > 0
               ? 'writing-mode-vertical text-3xl md:text-4xl tracking-tighter leading-none shrink-0'
               : 'text-[6vw] sm:text-[5vw] md:text-[4rem] lg:text-[5rem] leading-none mb-2 tracking-tighter'
           }`}
-          style={hasSubmitted ? { writingMode: 'vertical-rl', textOrientation: 'upright' } : {}}
+          style={messages.length > 0 ? { writingMode: 'vertical-rl', textOrientation: 'upright' } : {}}
           >
             WINGMAN
           </h1>
 
-            <div className={`flex transition-all duration-700 ${hasSubmitted ? 'w-full h-full' : 'w-full justify-center'}`}>
-            {/* Chat Input - Only show when not submitted */}
-            {!hasSubmitted && (
-              <form onSubmit={handleSubmit} className="space-y-3 w-full max-w-2xl">
-                <div className="relative">
-                  <input
-                    type="text"
-                    value={message}
-                    onChange={(e) => setMessage(e.target.value)}
-                    placeholder="what's the plan?"
-                    disabled={loading}
-                    className="w-full px-4 py-3 text-xl md:text-xl bg-white border-4 border-black text-black placeholder-gray-400 focus:outline-none focus:border-black font-mono disabled:opacity-50"
-                  />
-                </div>
+          <div className={`flex flex-col transition-all duration-700 ${messages.length > 0 ? 'w-full h-full' : 'w-full justify-center'}`}>
+            {/* Chat Messages */}
+            {messages.length > 0 && (
+              <div className="flex-1 overflow-y-auto mb-4 space-y-3 min-h-0">
+                {messages.map((msg, index) => (
+                  <div
+                    key={index}
+                    className={`p-4 border-4 border-black ${
+                      msg.role === 'user'
+                        ? 'bg-black text-white'
+                        : 'bg-white text-black'
+                    }`}
+                  >
+                    <p className="text-sm md:text-base leading-relaxed whitespace-pre-wrap">
+                      {msg.content}
+                    </p>
+                  </div>
+                ))}
+                {loading && (
+                  <div className="p-4 bg-white border-4 border-black">
+                    <p className="text-sm md:text-base text-gray-400 font-mono">cooking...</p>
+                  </div>
+                )}
+                <div ref={messagesEndRef} />
+              </div>
+            )}
 
+            {/* Chat Input - Always visible */}
+            <form onSubmit={handleSubmit} className={`space-y-3 ${messages.length === 0 ? 'w-full max-w-2xl' : 'w-full'}`}>
+              <div className="relative">
+                <input
+                  type="text"
+                  value={message}
+                  onChange={(e) => setMessage(e.target.value)}
+                  placeholder="what's the plan?"
+                  disabled={loading}
+                  className="w-full px-4 py-3 text-xl md:text-xl bg-white border-4 border-black text-black placeholder-gray-400 focus:outline-none focus:border-black font-mono disabled:opacity-50"
+                />
+              </div>
+
+              <div className="flex gap-3">
                 <button
                   type="submit"
                   disabled={loading || !message.trim()}
-                  className="w-full px-4 py-3 text-base md:text-lg bg-black text-white border-4 border-black font-mono uppercase tracking-wider hover:bg-white hover:text-black transition-colors disabled:opacity-50 disabled:cursor-not-allowed font-bold"
+                  className="flex-1 px-4 py-3 text-base md:text-lg bg-black text-white border-4 border-black font-mono uppercase tracking-wider hover:bg-white hover:text-black transition-colors disabled:opacity-50 disabled:cursor-not-allowed font-bold"
                 >
-                  {loading ? 'cooking...' : 'ask wingman'}
+                  {loading ? 'cooking...' : messages.length > 0 ? 'send' : 'ask wingman'}
                 </button>
-              </form>
-            )}
-
-            {/* Response - Show as full text box when submitted */}
-            {hasSubmitted && (
-              <div className="h-full w-full flex flex-col gap-3">
-                {/* User's question */}
-                <div className="p-3 bg-black text-white border-4 border-black flex-shrink-0">
-                  <p className="text-base md:text-lg font-mono font-bold">
-                    {message}
-                  </p>
-                </div>
-
-                {/* AI Response - Fixed height scrollable */}
-                <div className="flex-1 p-6 bg-white border-4 border-black overflow-y-auto min-h-0">
-                  {loading ? (
-                    <p className="text-base md:text-lg text-gray-400 font-mono">cooking...</p>
-                  ) : (
-                    <p className="text-sm md:text-base leading-relaxed whitespace-pre-wrap">
-                      {reply}
-                    </p>
-                  )}
-                </div>
-
-                {/* New question button */}
-                <button
-                  onClick={() => {
-                    setHasSubmitted(false);
-                    setMessage('');
-                    setReply('');
-                  }}
-                  className="px-4 py-2 text-sm md:text-base bg-black text-white border-4 border-black font-mono uppercase tracking-wider hover:bg-white hover:text-black transition-colors font-bold flex-shrink-0"
-                >
-                  ask another question
-                </button>
+                {messages.length > 0 && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setMessages([]);
+                      setConversationId(null);
+                      setMessage('');
+                    }}
+                    className="px-4 py-3 text-base md:text-lg bg-white text-black border-4 border-black font-mono uppercase tracking-wider hover:bg-black hover:text-white transition-colors font-bold"
+                  >
+                    new chat
+                  </button>
+                )}
               </div>
-            )}
+            </form>
           </div>
         </div>
       </main>

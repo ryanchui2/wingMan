@@ -27,8 +27,34 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // Generate AI response
-    const reply = await generateChatResponse(message);
+    // Fetch conversation history if conversationId exists
+    let conversationHistory: { role: 'user' | 'assistant'; content: string }[] = [];
+    if (conversationId && session?.user?.email) {
+      const user = await prisma.user.findUnique({
+        where: { email: session.user.email },
+      });
+
+      if (user) {
+        const conversation = await prisma.conversation.findFirst({
+          where: { id: conversationId, userId: user.id },
+          include: {
+            messages: {
+              orderBy: { createdAt: 'asc' },
+            },
+          },
+        });
+
+        if (conversation) {
+          conversationHistory = conversation.messages.map((msg) => ({
+            role: msg.role as 'user' | 'assistant',
+            content: msg.content,
+          }));
+        }
+      }
+    }
+
+    // Generate AI response with conversation history
+    const reply = await generateChatResponse(message, conversationHistory);
 
     // Save to database if user is logged in
     let savedConversationId = conversationId;
