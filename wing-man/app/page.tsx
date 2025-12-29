@@ -305,9 +305,9 @@ export default function Home() {
       <footer className="border-t-4 border-black bg-white">
         <div className="max-w-7xl mx-auto px-6 py-6">
           <nav className="flex flex-wrap gap-8 text-sm md:text-base font-mono uppercase tracking-wider">
-            <a href="#" className="hover:underline font-bold">
+            <Link href="/dates" className="hover:underline font-bold">
               Dates
-            </a>
+            </Link>
             <Link href="/profile" className="hover:underline font-bold">
               Profile
             </Link>

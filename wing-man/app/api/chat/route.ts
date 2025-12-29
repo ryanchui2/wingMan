@@ -27,9 +27,10 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // Fetch user profile and conversation history if logged in
+    // Fetch user profile, conversation history, and past dates if logged in
     let userProfile = null;
     let conversationHistory: { role: 'user' | 'assistant'; content: string }[] = [];
+    let pastDates = null;
 
     if (session?.user?.email) {
       const user = await prisma.user.findUnique({
@@ -58,11 +59,33 @@ export async function POST(req: NextRequest) {
             }));
           }
         }
+
+        // Fetch all past dates with ratings/notes for learning context
+        const userDates = await prisma.date.findMany({
+          where: {
+            userId: user.id,
+            OR: [
+              { rating: { not: null } },
+              { notes: { not: null } },
+            ],
+          },
+          select: {
+            name: true,
+            rating: true,
+            notes: true,
+            createdAt: true,
+          },
+          orderBy: { createdAt: 'desc' },
+        });
+
+        if (userDates.length > 0) {
+          pastDates = userDates;
+        }
       }
     }
 
-    // Generate AI response with conversation history and user profile
-    const reply = await generateChatResponse(message, conversationHistory, userProfile);
+    // Generate AI response with conversation history, user profile, and past dates
+    const reply = await generateChatResponse(message, conversationHistory, userProfile, pastDates);
 
     // Save to database if user is logged in
     let savedConversationId = conversationId;
