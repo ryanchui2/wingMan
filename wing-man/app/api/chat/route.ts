@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { generateChatResponse } from '@/lib/api/anthropic';
+// import { generateChatResponse } from '@/lib/api/anthropic';
+import { generateChatResponse } from '@/lib/api/gemini';
 import { auth } from '@/auth';
 import { cookies } from 'next/headers';
 import { prisma } from '@/lib/prisma';

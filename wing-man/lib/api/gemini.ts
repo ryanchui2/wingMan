@@ -1,11 +1,10 @@
-import Anthropic from '@anthropic-ai/sdk';
+import { GoogleGenerativeAI } from '@google/generative-ai';
 
-export const anthropic = new Anthropic({
-  apiKey: process.env.ANTHROPIC_API_KEY,
-});
+const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || '');
 
-// Change your claude model to your preferred version
-const MODEL = 'claude-opus-4-5-20251101';
+
+// gemini-2.0-flash-exp, gemini-1.5-pro, gemini-1.5-flash (cheapest)
+const MODEL = 'gemini-1.5-flash';
 
 const BASE_SYSTEM_PROMPT = `You are wingMan, a quirky and enthusiastic dating assistant. Help the user plan dates based on their request. Be concise, specific, and practical. Include venue suggestions, activities, and tips.
 
@@ -117,25 +116,22 @@ export async function generateChatResponse(
   // Build system prompt with user profile and past dates if available
   const systemPrompt = buildSystemPrompt(userProfile, pastDates);
 
-  // Build messages array with conversation history
-  const messages: Anthropic.MessageParam[] = [
-    ...conversationHistory.map((msg) => ({
-      role: msg.role,
-      content: msg.content,
-    })),
-    {
-      role: 'user' as const,
-      content: message,
-    },
-  ];
-
-  const response = await anthropic.messages.create({
+  const model = genAI.getGenerativeModel({
     model: MODEL,
-    max_tokens: 2048,
-    system: systemPrompt,
-    messages,
+    systemInstruction: systemPrompt,
   });
 
-  const content = response.content[0];
-  return content.type === 'text' ? content.text : '';
+  // Convert conversation history to Gemini format
+  const history = conversationHistory.map((msg) => ({
+    role: msg.role === 'assistant' ? 'model' : 'user',
+    parts: [{ text: msg.content }],
+  }));
+
+  const chat = model.startChat({
+    history,
+  });
+
+  const result = await chat.sendMessage(message);
+  const response = result.response;
+  return response.text();
 }
