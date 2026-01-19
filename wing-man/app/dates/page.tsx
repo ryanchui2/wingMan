@@ -29,6 +29,7 @@ export default function DatesPage() {
   const [editingRating, setEditingRating] = useState<string | null>(null);
   const [editingNotes, setEditingNotes] = useState<string | null>(null);
   const [notesValue, setNotesValue] = useState('');
+  const [hoveredRating, setHoveredRating] = useState<{ dateId: string; rating: number } | null>(null);
 
   // Redirect if not logged in
   useEffect(() => {
@@ -188,20 +189,30 @@ export default function DatesPage() {
                 {/* Rating */}
                 <div className="mb-4">
                   <p className="text-sm font-mono uppercase mb-2">Rating</p>
-                  <div className="flex gap-2">
-                    {[1, 2, 3, 4, 5].map((star) => (
-                      <button
-                        key={star}
-                        onClick={() => handleRatingClick(date.id, star)}
-                        className={`text-2xl ${
-                          date.rating && star <= date.rating
-                            ? 'text-yellow-500'
-                            : 'text-gray-300'
-                        } hover:text-yellow-400 transition-colors`}
-                      >
-                        ★
-                      </button>
-                    ))}
+                  <div
+                    className="flex gap-2"
+                    onMouseLeave={() => setHoveredRating(null)}
+                  >
+                    {[1, 2, 3, 4, 5].map((star) => {
+                      const isHovered = hoveredRating?.dateId === date.id && star <= hoveredRating.rating;
+                      const isRated = date.rating && star <= date.rating;
+                      const shouldHighlight = isHovered || (!hoveredRating && isRated);
+
+                      return (
+                        <button
+                          key={star}
+                          onClick={() => handleRatingClick(date.id, star)}
+                          onMouseEnter={() => setHoveredRating({ dateId: date.id, rating: star })}
+                          className={`text-2xl ${
+                            shouldHighlight
+                              ? 'text-yellow-500'
+                              : 'text-gray-300'
+                          } transition-colors`}
+                        >
+                          ★
+                        </button>
+                      );
+                    })}
                     {date.rating && (
                       <span className="ml-2 text-sm font-mono text-gray-600">
                         ({date.rating}/5)

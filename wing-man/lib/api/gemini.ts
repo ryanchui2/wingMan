@@ -204,14 +204,19 @@ export async function generateChatResponse(
   let systemPrompt = buildSystemPrompt(userProfile, pastDates);
 
   // Add instructions for using tools
-  systemPrompt += `\n\nTOOLS AVAILABLE:
-You have access to real-time venue search and distance calculation tools. Use them to:
-- Search for actual venues, restaurants, cafes, and places with current ratings and hours
-- Calculate travel times and distances between locations
-- Provide accurate, up-to-date recommendations based on real data
+  systemPrompt += `\n\nIMPORTANT - TOOL USAGE:
+You have access to real-time tools that you MUST use by calling them (not by showing code):
+- search_venues: Find real venues with ratings, hours, and addresses
+- calculate_distance: Get actual travel times between locations
 
-When suggesting venues, ALWAYS use the search_venues tool to get real options.
-When planning routes or timing, use calculate_distance to give accurate estimates.`;
+CRITICAL RULES:
+1. CALL THE TOOLS DIRECTLY - don't show code examples or explain how to use them
+2. When suggesting venues, you MUST call search_venues first to get real places
+3. When discussing travel between locations, you MUST call calculate_distance to get accurate times
+4. NEVER write code examples like "print(calculate_distance(...))" - just call the function
+5. Present the tool results naturally in your response without mentioning you used a tool
+
+The user sees your final response, not the tool calls. Use the tools silently to get data, then provide a natural, helpful response with that information.`;
 
   const model = genAI.getGenerativeModel({
     model: MODEL,
