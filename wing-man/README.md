@@ -9,6 +9,7 @@ Behind every great relationship is a supportive wingman. wingMan is an AI-powere
 - **Google Maps Integration**: Find perfect date spots with real-time map integration
 - **PDF Export**: Export your date plans to beautiful PDFs you can save or share
 - **Progress Tracking**: Save favorite dates, rate experiences, and track your dating journey
+- **Guest Mode**: Try the app without signing up (limited usage)
 
 ## Tech Stack
 
@@ -18,17 +19,21 @@ Behind every great relationship is a supportive wingman. wingMan is an AI-powere
 - **React 19** - UI library
 - **TypeScript** - Type safety
 - **Tailwind CSS v4** - Styling
-- **Lucide React** - Icons
+
+### Backend & Database
+
+- **Prisma ORM** - Database toolkit
+- **SQLite (libSQL)** - Database
+- **NextAuth.js** - Authentication (Google OAuth)
 
 ### State Management
 
 - **Zustand** - Lightweight state management
-- **Jotai** - Atomic state management (optional)
 
 ### AI & APIs
 
 - **Google Generative AI SDK** - Gemini AI integration for chat
-- **Google Maps API** - Location and mapping services
+- **Google Maps API** - Location and mapping services (Places, Distance Matrix)
 
 ### PDF Generation
 
@@ -42,6 +47,7 @@ Behind every great relationship is a supportive wingman. wingMan is an AI-powere
 - API Keys for:
   - Google Gemini AI
   - Google Maps
+  - Google OAuth (for authentication)
 
 ### Installation
 
@@ -62,6 +68,16 @@ cp .env.local.example .env.local
 ```env
 GEMINI_API_KEY=your_gemini_api_key_here
 NEXT_PUBLIC_GOOGLE_MAPS_API_KEY=your_google_maps_api_key_here
+AUTH_GOOGLE_ID=your_google_oauth_client_id
+AUTH_GOOGLE_SECRET=your_google_oauth_client_secret
+AUTH_SECRET=your_nextauth_secret
+```
+
+4. Set up the database:
+
+```bash
+npx prisma generate
+npx prisma db push
 ```
 
 ### Running the Development Server
@@ -78,20 +94,34 @@ Open [http://localhost:3000](http://localhost:3000) in your browser.
 wing-man/
 ├── app/                    # Next.js App Router
 │   ├── api/               # API routes
-│   ├── chat/              # AI chat interface
-│   ├── dates/             # Date management pages
-│   ├── profile/           # User profile pages
+│   │   ├── auth/          # NextAuth.js routes
+│   │   ├── chat/          # AI chat endpoint
+│   │   ├── conversations/ # Conversation CRUD
+│   │   ├── dates/         # Date management
+│   │   ├── maps/          # Google Maps proxy
+│   │   ├── pdf/           # PDF generation
+│   │   └── profile/       # User profile
+│   ├── components/        # Page-specific components
+│   ├── dates/             # Date management page
+│   ├── history/           # Chat history page
+│   ├── login/             # Login page
+│   ├── profile/           # User profile page
 │   ├── layout.tsx         # Root layout
-│   └── page.tsx           # Home page
-├── components/            # React components
+│   └── page.tsx           # Home page (AI chat)
 ├── lib/                   # Utilities and configurations
 │   ├── api/              # API integrations
 │   │   ├── gemini.ts     # Gemini AI integration
 │   │   └── googleMaps.ts # Google Maps API
-│   ├── store/            # State management
-│   │   └── chatStore.ts  # Chat state store
-│   └── pdf/              # PDF generation
-│       └── DatePlanPDF.tsx
+│   ├── store/            # Zustand state stores
+│   │   ├── chatStore.ts  # Chat state
+│   │   ├── dateStore.ts  # Date management state
+│   │   └── userStore.ts  # User state
+│   ├── pdf/              # PDF generation
+│   │   └── DatePlanPDF.tsx
+│   ├── prisma.ts         # Prisma client
+│   └── guestLimits.ts    # Guest mode rate limiting
+├── prisma/               # Database schema and migrations
+│   └── schema.prisma
 └── public/               # Static assets
 ```
 
@@ -109,6 +139,13 @@ wing-man/
 2. Enable Maps JavaScript API and Places API
 3. Create credentials (API Key)
 4. Add to `.env.local` as `NEXT_PUBLIC_GOOGLE_MAPS_API_KEY`
+
+### Google OAuth (Authentication)
+
+1. Go to [Google Cloud Console](https://console.cloud.google.com)
+2. Create OAuth 2.0 credentials
+3. Add authorized redirect URI: `http://localhost:3000/api/auth/callback/google`
+4. Add credentials to `.env.local`
 
 ## Development
 
@@ -130,9 +167,18 @@ npm start
 npm run lint
 ```
 
+### Database Commands
+
+```bash
+npx prisma studio    # Open database GUI
+npx prisma db push   # Push schema changes
+npm run db:seed      # Seed the database
+```
+
 ## Completed Features
 
 - [x] User authentication (NextAuth.js with Google OAuth)
+- [x] Guest mode with usage limits
 - [x] AI chat interface with Gemini
 - [x] Date planning and conversation management
 - [x] Google Maps integration (Places API)
