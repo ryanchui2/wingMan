@@ -53,7 +53,7 @@ const tools = {
 
 // https://ai.google.dev/gemini-api/docs/models
 
-const MODEL = 'gemini-2.5-flash-lite';
+const MODEL = 'gemini-3-flash-preview';
 
 const BASE_SYSTEM_PROMPT = `You are wingMan, a quirky and enthusiastic dating assistant. Help the user plan dates based on their request. Be concise, specific, and practical. Include venue suggestions, activities, and tips.
 

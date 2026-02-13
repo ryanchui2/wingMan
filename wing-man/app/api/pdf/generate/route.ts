@@ -6,7 +6,7 @@ import { auth } from '@/auth';
 export async function POST(req: NextRequest) {
   try {
     const session = await auth();
-    const { dateName, content, conversationId } = await req.json();
+    const { dateName, content } = await req.json();
 
     if (!dateName || !content) {
       return NextResponse.json(
@@ -19,18 +19,23 @@ export async function POST(req: NextRequest) {
     const userName = session?.user?.name || undefined;
 
     // Generate PDF
-    const pdfStream = await renderToStream(
-      DatePlanPDF({
-        dateName,
-        content,
-        userName,
-      })
-    );
+    const pdfDocument = DatePlanPDF({
+      dateName,
+      content,
+      userName,
+    });
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const pdfStream = await renderToStream(pdfDocument as any);
 
     // Convert stream to buffer
-    const chunks: Uint8Array[] = [];
+    const chunks: Buffer[] = [];
     for await (const chunk of pdfStream) {
-      chunks.push(chunk);
+      if (typeof chunk === 'string') {
+        chunks.push(Buffer.from(chunk));
+      } else {
+        chunks.push(Buffer.from(chunk));
+      }
     }
     const pdfBuffer = Buffer.concat(chunks);
 
@@ -38,7 +43,7 @@ export async function POST(req: NextRequest) {
     return new NextResponse(pdfBuffer, {
       headers: {
         'Content-Type': 'application/pdf',
-        'Content-Disposition': `attachment; filename="${dateName.replace(/[^a-z0-9]/gi, '_')}_date_plan.pdf"`,
+        'Content-Disposition': `attachment; filename="${dateName.replace(/[^a-z0-9]/gi, '_')}_wingMan.pdf"`,
       },
     });
   } catch (error) {

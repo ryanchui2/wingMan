@@ -30,6 +30,7 @@ export default function DatesPage() {
   const [editingNotes, setEditingNotes] = useState<string | null>(null);
   const [notesValue, setNotesValue] = useState('');
   const [hoveredRating, setHoveredRating] = useState<{ dateId: string; rating: number } | null>(null);
+  const [generatingPdf, setGeneratingPdf] = useState<string | null>(null);
 
   // Redirect if not logged in
   useEffect(() => {
@@ -98,6 +99,81 @@ export default function DatesPage() {
       }
     } catch (error) {
       console.error('Failed to update notes:', error);
+    }
+  };
+
+  const handlePrintPdf = async (date: Date) => {
+    if (date.conversations.length === 0) {
+      alert('No conversations linked to this date');
+      return;
+    }
+
+    setGeneratingPdf(date.id);
+
+    try {
+      // Fetch all conversations with messages
+      const response = await fetch('/api/conversations');
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error('Failed to fetch conversations');
+      }
+
+      // Filter to only linked conversations and compile content
+      const linkedConversationIds = date.conversations.map(c => c.id);
+      const linkedConversations = data.conversations.filter(
+        (c: { id: string }) => linkedConversationIds.includes(c.id)
+      );
+
+      // Compile only the last AI response from each conversation (finalized date plan)
+      let content = '';
+      linkedConversations.forEach((conv: { title: string; messages: { role: string; content: string }[] }) => {
+        const assistantMessages = conv.messages.filter(
+          (m: { role: string }) => m.role === 'assistant'
+        );
+        if (assistantMessages.length > 0) {
+          content += `## ${conv.title}\n\n`;
+          // Only include the last assistant message (finalized plan)
+          const lastMessage = assistantMessages[assistantMessages.length - 1];
+          content += lastMessage.content + '\n\n';
+        }
+      });
+
+      if (!content.trim()) {
+        alert('No AI responses found in linked conversations');
+        setGeneratingPdf(null);
+        return;
+      }
+
+      // Generate PDF
+      const pdfResponse = await fetch('/api/pdf/generate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          dateName: date.name,
+          content,
+        }),
+      });
+
+      if (!pdfResponse.ok) {
+        throw new Error('Failed to generate PDF');
+      }
+
+      // Download the PDF
+      const blob = await pdfResponse.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `${date.name.replace(/[^a-z0-9]/gi, '_')}_wingMan.pdf`;
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+    } catch (error) {
+      console.error('Failed to generate PDF:', error);
+      alert('Failed to generate PDF');
+    } finally {
+      setGeneratingPdf(null);
     }
   };
 
@@ -178,12 +254,21 @@ export default function DatesPage() {
                   <h2 className="text-2xl font-bold font-mono">
                     {date.name}
                   </h2>
-                  <button
-                    onClick={() => handleDeleteDate(date.id)}
-                    className="px-3 py-1 bg-white text-black border-2 border-black hover:bg-red-50 hover:border-red-500 hover:text-red-500 transition-colors font-mono font-bold uppercase text-xs"
-                  >
-                    Delete
-                  </button>
+                  <div className="flex gap-2">
+                    <button
+                      onClick={() => handlePrintPdf(date)}
+                      disabled={generatingPdf === date.id || date.conversations.length === 0}
+                      className="px-3 py-1 bg-black text-white border-2 border-black hover:bg-white hover:text-black transition-colors font-mono font-bold uppercase text-xs disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      {generatingPdf === date.id ? 'Generating...' : 'Print PDF'}
+                    </button>
+                    <button
+                      onClick={() => handleDeleteDate(date.id)}
+                      className="px-3 py-1 bg-white text-black border-2 border-black hover:bg-red-50 hover:border-red-500 hover:text-red-500 transition-colors font-mono font-bold uppercase text-xs"
+                    >
+                      Delete
+                    </button>
+                  </div>
                 </div>
 
                 {/* Rating */}

@@ -18,6 +18,7 @@ export interface PlaceDetails {
   types?: string[];
   website?: string;
   formatted_phone_number?: string;
+  business_status?: 'OPERATIONAL' | 'CLOSED_TEMPORARILY' | 'CLOSED_PERMANENTLY';
 }
 
 export interface DistanceResult {
@@ -47,15 +48,14 @@ export async function searchPlaces(
     throw new Error('Google Maps API key not configured');
   }
 
+  // Include location in query for better results
+  // The location parameter only works with lat,lng coordinates, not place names
+  const fullQuery = location ? `${query} in ${location}` : query;
+
   const params = new URLSearchParams({
-    query,
+    query: fullQuery,
     key: apiKey,
   });
-
-  if (location) {
-    params.append('location', location);
-    params.append('radius', '5000'); // 5km radius
-  }
 
   const response = await fetch(
     `https://maps.googleapis.com/maps/api/place/textsearch/json?${params.toString()}`
@@ -67,7 +67,17 @@ export async function searchPlaces(
     throw new Error(`Places API error: ${data.status} - ${data.error_message || 'Unknown error'}`);
   }
 
-  return data.results || [];
+  // Filter out closed places and low-quality results
+  const results = (data.results || []) as PlaceDetails[];
+  return results
+    .filter(
+      (place) => !place.business_status || place.business_status === 'OPERATIONAL'
+    )
+    .filter(
+      // Only include places with ratings >= 3.5 or no rating (new places)
+      (place) => !place.rating || place.rating >= 3.5
+    )
+    .slice(0, 5); // Limit to top 5 results for quality
 }
 
 /**
