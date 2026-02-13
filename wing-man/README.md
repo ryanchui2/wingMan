@@ -4,7 +4,7 @@ Behind every great relationship is a supportive wingman. wingMan is an AI-powere
 
 ## Features
 
-- **AI Wingman Chat**: Chat with Claude AI to get personalized date ideas based on your preferences and profile
+- **AI Wingman Chat**: Chat with Gemini AI to get personalized date ideas based on your preferences and profile
 - **Smart Date Planning**: Create and manage date plans with integrated location services
 - **Google Maps Integration**: Find perfect date spots with real-time map integration
 - **PDF Export**: Export your date plans to beautiful PDFs you can save or share
@@ -27,7 +27,7 @@ Behind every great relationship is a supportive wingman. wingMan is an AI-powere
 
 ### AI & APIs
 
-- **Anthropic AI SDK** - Claude AI integration for chat
+- **Google Generative AI SDK** - Gemini AI integration for chat
 - **Google Maps API** - Location and mapping services
 
 ### PDF Generation
@@ -40,7 +40,7 @@ Behind every great relationship is a supportive wingman. wingMan is an AI-powere
 
 - Node.js 20+ installed
 - API Keys for:
-  - Anthropic (Claude AI)
+  - Google Gemini AI
   - Google Maps
 
 ### Installation
@@ -60,7 +60,7 @@ cp .env.local.example .env.local
 3. Edit `.env.local` and add your API keys:
 
 ```env
-ANTHROPIC_API_KEY=your_anthropic_api_key_here
+GEMINI_API_KEY=your_gemini_api_key_here
 NEXT_PUBLIC_GOOGLE_MAPS_API_KEY=your_google_maps_api_key_here
 ```
 
@@ -86,23 +86,22 @@ wing-man/
 ├── components/            # React components
 ├── lib/                   # Utilities and configurations
 │   ├── api/              # API integrations
-│   │   ├── anthropic.ts  # Claude AI integration
+│   │   ├── gemini.ts     # Gemini AI integration
 │   │   └── googleMaps.ts # Google Maps API
 │   ├── store/            # State management
-│   │   ├── dateStore.ts  # Date plans store
-│   │   └── userStore.ts  # User profile store
+│   │   └── chatStore.ts  # Chat state store
 │   └── pdf/              # PDF generation
-│       └── generateDatePlan.tsx
+│       └── DatePlanPDF.tsx
 └── public/               # Static assets
 ```
 
 ## API Setup
 
-### Anthropic API
+### Google Gemini API
 
-1. Sign up at [console.anthropic.com](https://console.anthropic.com)
+1. Go to [Google AI Studio](https://aistudio.google.com)
 2. Create an API key
-3. Add to `.env.local` as `ANTHROPIC_API_KEY`
+3. Add to `.env.local` as `GEMINI_API_KEY`
 
 ### Google Maps API
 
@@ -131,16 +130,16 @@ npm start
 npm run lint
 ```
 
-## Features to Implement
+## Completed Features
 
-- [ ] User authentication
-- [ ] AI chat interface with Claude
-- [ ] Date planning form
-- [ ] Google Maps integration
-- [ ] Date history and rating system
-- [ ] PDF export functionality
-- [ ] User profile management
-- [ ] Responsive design improvements
+- [x] User authentication (NextAuth.js with Google OAuth)
+- [x] AI chat interface with Gemini
+- [x] Date planning and conversation management
+- [x] Google Maps integration (Places API)
+- [x] Date history and rating system
+- [x] PDF export functionality
+- [x] User profile management
+- [x] Responsive design
 
 ## Contributing
 

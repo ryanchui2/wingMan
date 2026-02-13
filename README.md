@@ -17,7 +17,7 @@ https://youtu.be/Tnrh6qhrUtQ
 - Edit the gemini model here.
 
 ```
-./wing-man/.env
+./wing-man/README.md
 ```
 
-- use `.env.exmaple`, enter all the relavent API keys.
+- For more information
